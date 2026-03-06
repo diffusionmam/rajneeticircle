@@ -85,8 +85,10 @@ class App {
   }
 }
 
+// Initialize analytics as early as possible
+inject();
+
 // Bootstrap
 document.addEventListener('DOMContentLoaded', () => {
-  inject();
   new App();
 });
