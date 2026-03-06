@@ -1,0 +1,27 @@
+{
+  "name": "rajneeticircle",
+  "version": "1.0.0",
+  "description": "A questionnaire to determine your political and social leaning.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diffusionmam/rajneeticircle.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/diffusionmam/rajneeticircle/issues"
+  },
+  "homepage": "https://github.com/diffusionmam/rajneeticircle#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}
