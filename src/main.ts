@@ -18,7 +18,8 @@ class App {
   private getInitialSession(): QuizSession {
     return {
       currentQuestionIndex: 0,
-      scores: {},
+      economicScore: 0,
+      authorityScore: 0,
       completed: false
     };
   }
@@ -61,16 +62,23 @@ class App {
       currentQ,
       this.session.currentQuestionIndex,
       questions.length,
-      (selectedValue: string) => this.handleOptionSelect(selectedValue)
+      (likertValue: number) => this.handleOptionSelect(likertValue)
     );
   }
 
-  private handleOptionSelect(value: string) {
-    // Tally score
-    if (!this.session.scores[value]) {
-      this.session.scores[value] = 0;
+  private handleOptionSelect(likertValue: number) {
+    const currentQ = questions[this.session.currentQuestionIndex];
+
+    // Multiply the Likert response by the question's direction
+    // direction = +1: Agree pushes Right/Auth
+    // direction = -1: Agree pushes Left/Lib
+    const weightedScore = likertValue * currentQ.direction;
+
+    if (currentQ.axis === 'economic') {
+      this.session.economicScore += weightedScore;
+    } else {
+      this.session.authorityScore += weightedScore;
     }
-    this.session.scores[value]++;
 
     // Advance
     this.session.currentQuestionIndex++;

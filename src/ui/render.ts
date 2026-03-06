@@ -1,5 +1,13 @@
-import type { Question, Option, ViewState } from '../logic/types';
+import type { LikertQuestion, ViewState } from '../logic/types';
 import type { ScoreResult } from '../logic/scoring';
+
+const LIKERT_OPTIONS = [
+    { label: 'Strongly Agree', value: 2 },
+    { label: 'Agree', value: 1 },
+    { label: 'Neutral', value: 0 },
+    { label: 'Disagree', value: -1 },
+    { label: 'Strongly Disagree', value: -2 }
+];
 
 export class UIRenderer {
     private viewLanding: HTMLElement;
@@ -53,10 +61,10 @@ export class UIRenderer {
     }
 
     public renderQuestion(
-        question: Question,
+        question: LikertQuestion,
         currentIndex: number,
         totalQuestions: number,
-        onOptionSelect: (value: string) => void
+        onOptionSelect: (value: number) => void
     ) {
         // Update Progress
         this.progressText.innerText = `Question ${currentIndex + 1} of ${totalQuestions}`;
@@ -75,11 +83,11 @@ export class UIRenderer {
             // Clear old options
             this.optionsContainer.innerHTML = '';
 
-            // Render new options
-            question.options.forEach((opt: Option) => {
+            // Render Likert scale buttons
+            LIKERT_OPTIONS.forEach((opt) => {
                 const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerHTML = `<span class="option-label"><strong>${opt.id})</strong></span><span class="option-text">${opt.text}</span>`;
+                btn.className = 'option-btn likert-btn';
+                btn.innerHTML = `<span class="option-text">${opt.label}</span>`;
 
                 btn.onclick = () => {
                     // Visual feedback before proceeding

@@ -3,122 +3,94 @@ import type { QuizSession } from '../logic/types';
 export interface ScoreResult {
     title: string;
     description: string;
-    x: number;
-    y: number;
+    x: number;  // 0-100, Left to Right
+    y: number;  // 0-100, Lib (bottom) to Auth (top)
 }
 
+/**
+ * Likert scale scoring:
+ * Each question contributes to one axis (economic or authority).
+ * The user's response is a value from -2 to +2:
+ *   Strongly Disagree = -2, Disagree = -1, Neutral = 0, Agree = +1, Strongly Agree = +2
+ *
+ * This value is multiplied by the question's `direction`:
+ *   direction = +1: "Agree" pushes Right (economic) or Authoritarian (authority)
+ *   direction = -1: "Agree" pushes Left (economic) or Libertarian (authority)
+ *
+ * Final scores are normalized to a 0-100 % scale for plotting on the spectrum.
+ */
+
 export function calculateResult(session: QuizSession): ScoreResult {
-    const scores = session.scores;
-    const a = scores['A'] || 0;
-    const b = scores['B'] || 0;
-    const c = scores['C'] || 0;
-    const d = scores['D'] || 0;
+    const { economicScore, authorityScore } = session;
 
-    const total = Object.values(scores).reduce((sum, val) => sum + val, 0) || 1; // avoid div by 0
+    // Each axis has 25 questions. Max possible per axis = 25 * 2 = 50, Min = -50.
+    // Normalize from [-50, +50] to [0, 100]
+    const x = ((economicScore + 50) / 100) * 100;  // 0 = hard left, 100 = hard right
+    const y = ((authorityScore + 50) / 100) * 100;  // 0 = hard libertarian, 100 = hard authoritarian
 
-    // X Axis: Right = 'A' + 'D', Left = 'B' + 'C'
-    const rightScore = a + d;
-    const leftScore = b + c;
-    const rightPercent = (rightScore / total) * 100;
-    const leftPercent = (leftScore / total) * 100;
+    const clampedX = Math.max(0, Math.min(100, x));
+    const clampedY = Math.max(0, Math.min(100, y));
 
-    // Y Axis: Auth = 'A' + 'C', Lib = 'B' + 'D'
-    const authScore = a + c;
-    const libScore = b + d;
-    const authPercent = (authScore / total) * 100;
-    const libPercent = (libScore / total) * 100;
+    const title = getTitle(clampedX, clampedY);
+    const description = getDescription(clampedX, clampedY);
 
-    // Scale X to 0-100 where 50 is center
-    let x = 50 + (rightPercent - leftPercent) / 2;
-    // Scale Y to 0-100 where 0 is bottom (Lib), 100 is top (Auth)
-    let y = 50 - (authPercent - libPercent) / 2; // Subtract to move Auth up towards top (lower Y in flex terms, wait, usually in CSS bottom = 0 is Lib, bottom = 100 is Auth)
-    // Actually, mathematically if Auth is top: y should be authPercent. 
-    // x = (x% from Left to Right), y = (y% from Top to Bottom) or Bottom to Top.
-    // If we use bottom: y%; then 0% is bottom (Lib), 100% is top (Auth).
-    // Center is 50. Auth score pulls it UP. Lib score pulls it DOWN.
-    y = 50 + (authPercent - libPercent) / 2;
+    return { title, description, x: clampedX, y: clampedY };
+}
 
-    let maxScore = Math.max(a, b, c, d);
-    let tiedTraits: string[] = [];
+function getTitle(x: number, y: number): string {
+    // Determine zone based on where user falls on the grid
+    const isRight = x > 60;
+    const isLeft = x < 40;
+    const isAuth = y > 60;
+    const isLib = y < 40;
 
-    if (a === maxScore) tiedTraits.push('A');
-    if (b === maxScore) tiedTraits.push('B');
-    if (c === maxScore) tiedTraits.push('C');
-    if (d === maxScore) tiedTraits.push('D');
+    // Strong corners (outer 25%)
+    if (isAuth && isRight) return "The Nationalist Realist (Authoritarian Right)";
+    if (isAuth && isLeft) return "The State Socialist (Authoritarian Left)";
+    if (isLib && isRight) return "The Free Market Libertarian (Libertarian Right)";
+    if (isLib && isLeft) return "The Social Liberal (Libertarian Left)";
 
-    if (tiedTraits.length > 1) {
-        if (tiedTraits.length === 2) {
-            if (tiedTraits.includes('A') && tiedTraits.includes('C')) {
-                return {
-                    title: "The Paternalistic State Advocate (Authoritarian Centrist)",
-                    description: "You believe the state exists to guide and protect its citizens through strong central authority, balancing nationalistic cultural values with collective economic organization.\n\nSocietal & Cultural Posture: You favor order, discipline, and community cohesion over extreme individual liberty. You believe that both the market and individual impulses need strict governance to prevent cultural decay and economic exploitation.",
-                    x, y
-                };
-            }
-            if (tiedTraits.includes('B') && tiedTraits.includes('D')) {
-                return {
-                    title: "The Civil Libertarian (Libertarian Centrist)",
-                    description: "You believe in maximum freedom both socially and economically. Individual liberty is your primary value, rejecting both corporate monopolies and state overreach.\n\nSocietal & Cultural Posture: You support absolute freedom in personal choices like marriage and family structure. You embrace social change and modernity, believing it should happen naturally through free association rather than state mandates.",
-                    x, y
-                };
-            }
-            if (tiedTraits.includes('A') && tiedTraits.includes('D')) {
-                return {
-                    title: "The Conservative Capitalist (Right-Wing Populist)",
-                    description: "You blend cultural conservatism with capitalist economics. You favor a strong cultural identity but prefer free markets and deregulation to drive national growth.\n\nSocietal & Cultural Posture: You strongly prefer traditional family units, view marriage as a stabilizing cultural institution, and want to preserve national heritage against rapid globalized changes while letting the economy run free.",
-                    x, y
-                };
-            }
-            if (tiedTraits.includes('B') && tiedTraits.includes('C')) {
-                return {
-                    title: "The Democratic Socialist (Left-Wing Populist)",
-                    description: "You combine a strong belief in economic redistribution and state welfare with a commitment to social justice and human rights, aiming to uplift the working class and marginalized groups.\n\nSocietal & Cultural Posture: You are socially progressive, championing new definitions of family and culture. You view traditions critically if they enforce inequality, and believe society must actively reform to ensure equitable outcomes for everyone.",
-                    x, y
-                };
-            }
-            if ((tiedTraits.includes('A') && tiedTraits.includes('B')) || (tiedTraits.includes('C') && tiedTraits.includes('D'))) {
-                return {
-                    title: "The Radical Centrist (Unorthodox Thinker)",
-                    description: "Your political compass pulls from directly opposing corners of traditional political thought. You hold highly specific, sometimes contradictory views that don't fit neatly into right/left or authoritarian/libertarian boxes.\n\nSocietal & Cultural Posture: You evaluate traditionalism and progressivism on a strict case-by-case basis. You might believe in radical social freedom but extreme economic control, or vice versa, treating culture and statecraft as distinct, independent levers.",
-                    x, y
-                };
-            }
-        }
+    // Edge cases: strong on one axis, centrist on another
+    if (isAuth) return "The Paternalistic State Advocate (Authoritarian Centrist)";
+    if (isLib) return "The Civil Libertarian (Libertarian Centrist)";
+    if (isRight) return "The Conservative Capitalist (Right-Wing Centrist)";
+    if (isLeft) return "The Democratic Socialist (Left-Wing Centrist)";
 
-        return {
-            title: "The Blended Pragmatist (Total Centrist)",
-            description: "Your views are highly balanced across the spectrum, taking ideas from all across the political landscape depending entirely on pragmatic necessity rather than ideological purity.\n\nSocietal & Cultural Posture: Your approach to culture, family, and social change is moderate and hyper-situational. You respect tradition but are constantly open to practical modernization, valuing whatever keeps society stable and prosperous at any given moment.",
-            x, y
-        };
+    // True center
+    return "The Blended Pragmatist (Centrist)";
+}
+
+function getDescription(x: number, y: number): string {
+    const isRight = x > 60;
+    const isLeft = x < 40;
+    const isAuth = y > 60;
+    const isLib = y < 40;
+
+    if (isAuth && isRight) {
+        return "**Domestic Posture:** You believe in a strong, centralized state that enforces cultural cohesion, national security, and rapid development, even at the cost of individual liberties or regional autonomy.\n**Economic Posture:** State-directed capitalism. The government actively guides big business to build national strength.\n**Geopolitical Posture:** Hard power and realism. You view the world as a ruthless hierarchy where India must project military and economic dominance.\n**Societal & Cultural Posture:** You hold deep reverence for tradition, traditional family structures, and cultural heritage. You view marriage as a foundational building block of society, believe raising kids with strong civilizational values is crucial, and are skeptical of rapid liberal social changes.";
+    }
+    if (isAuth && isLeft) {
+        return "**Domestic Posture:** You view society primarily through the lens of class struggle. You favor radical decentralization of social structures but absolute centralization of economic resources to dismantle historical hierarchies.\n**Economic Posture:** Command economy. You advocate for massive wealth redistribution, state ownership of critical industries, and the elimination of private monopolies.\n**Geopolitical Posture:** Anti-imperialist. You are highly skeptical of Western capitalist alliances and prefer solidarity with the Global South.\n**Societal & Cultural Posture:** You view traditional social structures—including traditional marriage and nuclear families—as inherently tied to capitalist and patriarchal property relations. You champion radical social reorganization and community-based living, supporting the dismantling of oppressive traditions.";
+    }
+    if (isLib && isRight) {
+        return "**Domestic Posture:** You believe in maximum individual liberty and minimal government interference. You view state bureaucracy as the primary obstacle to human progress and freedom.\n**Economic Posture:** Laissez-faire capitalism. You support radical deregulation, privatization, and free trade, believing the free market solves problems better than state planning.\n**Geopolitical Posture:** Hyper-pragmatism. You view foreign policy as purely transactional—driven by trade, capital flows, and economic advantage.\n**Societal & Cultural Posture:** You are socially permissive but highly individualistic. You believe people should be free to define marriage, family, and culture however they see fit, as long as they don't infringe on others' rights. Your focus is on individual autonomy rather than collective social engineering.";
+    }
+    if (isLib && isLeft) {
+        return "**Domestic Posture:** You prioritize individual human rights, social justice, and pluralism. You view the state's primary role as a protector of marginalized communities and the environment.\n**Economic Posture:** Democratic socialism or a strong welfare state. You believe the excesses of capitalism must be curbed to ensure equitable wealth distribution.\n**Geopolitical Posture:** Idealism and soft power. You believe India should lead through moral authority, diplomacy, democratic values, and multilateral cooperation.\n**Societal & Cultural Posture:** You are socially progressive and highly open to change. You view family and marriage as flexible concepts that should accommodate diverse individual choices. You believe culture should constantly evolve to correct historical injustices and embrace new, egalitarian norms.";
     }
 
-    const primary = tiedTraits[0];
-    switch (primary) {
-        case 'A':
-            return {
-                title: "The Nationalist Realist (Authoritarian / Strong State)",
-                description: "**Domestic Posture:** You believe in a strong, centralized state that enforces cultural cohesion, national security, and rapid development, even at the cost of individual liberties or regional autonomy.\n**Economic Posture:** State-directed capitalism. The government actively guides big business to build national strength.\n**Geopolitical Posture:** Hard power and realism. You view the world as a ruthless hierarchy where India must project military and economic dominance to survive and secure its interests.\n**Societal & Cultural Posture:** You hold deep reverence for tradition, traditional family structures, and cultural heritage. You likely view the institution of marriage as a foundational building block of society rather than just a personal contract, and believe raising kids with strong civilizational values is crucial. You are skeptical of rapid liberal social changes, preferring that society evolves slowly without discarding the wisdom of the past.",
-                x, y
-            };
-        case 'B':
-            return {
-                title: "The Social Liberal (Libertarian Left / Idealist)",
-                description: "**Domestic Posture:** You prioritize individual human rights, social justice, and pluralism. You view the state's primary role as a protector of marginalized communities and the environment.\n**Economic Posture:** Democratic socialism or a strong welfare state. You believe the excesses of capitalism must be curbed to ensure equitable wealth distribution and baseline survival for all.\n**Geopolitical Posture:** Idealism and soft power. You believe India should lead through moral authority, diplomacy, democratic values, and multilateral cooperation.\n**Societal & Cultural Posture:** You are socially progressive and highly open to change. You view family and marriage as flexible concepts that should accommodate diverse individual choices. You believe culture should constantly evolve to correct historical injustices and embrace new, egalitarian norms. You prioritize raising children to be open-minded, tolerant, and critical thinkers who question traditional dogma.",
-                x, y
-            };
-        case 'C':
-            return {
-                title: "The State Socialist (Collectivist / Radical Left)",
-                description: "**Domestic Posture:** You view society primarily through the lens of class struggle. You favor radical decentralization of social structures but absolute centralization of economic resources to dismantle historical hierarchies.\n**Economic Posture:** Command economy. You advocate for massive wealth redistribution, state ownership of critical industries, and the elimination of private monopolies.\n**Geopolitical Posture:** Anti-imperialist. You are highly skeptical of Western capitalist alliances and prefer solidarity with the Global South or alternative non-Western blocs to challenge US/Western hegemony.\n**Societal & Cultural Posture:** You view traditional social structures—including traditional marriage and nuclear families—as inherently tied to capitalist and patriarchal property relations. You champion radical social reorganization and community-based living. For you, culture is an active battleground; you support dismantling oppressive traditions and rapidly engineering society toward collective equality.",
-                x, y
-            };
-        case 'D':
-            return {
-                title: "The Free Market Libertarian (Libertarian Right / Pragmatist)",
-                description: "**Domestic Posture:** You believe in maximum individual liberty and minimal government interference. You view state bureaucracy as the primary obstacle to human progress and freedom.\n**Economic Posture:** Laissez-faire capitalism. You support radical deregulation, privatization, and free trade, believing the free market solves problems better than state planning.\n**Geopolitical Posture:** Hyper-pragmatism. You view foreign policy as purely transactional—driven by trade, capital flows, and economic advantage, devoid of moral crusades or emotional historical baggage.\n**Societal & Cultural Posture:** You are socially permissive but highly individualistic. You believe people should be free to define marriage, family, and culture however they see fit, as long as they don't infringe on others' rights or demand state funding. You are indifferent to whether society is traditional or progressive, so long as interactions remain voluntary. Your focus for the future is on individual autonomy rather than collective social engineering.",
-                x, y
-            };
-        default:
-            return { title: "Unknown", description: "", x: 50, y: 50 };
+    if (isAuth) {
+        return "You believe the state exists to guide and protect its citizens through strong central authority, balancing different cultural and economic values under a firm governance framework.\n\n**Societal & Cultural Posture:** You favor order, discipline, and community cohesion over extreme individual liberty. You believe that both the market and individual impulses need strict governance to prevent cultural decay and economic exploitation.";
     }
+    if (isLib) {
+        return "You believe in maximum freedom both socially and economically. Individual liberty is your primary value, rejecting both corporate monopolies and state overreach.\n\n**Societal & Cultural Posture:** You support absolute freedom in personal choices like marriage and family structure. You embrace social change and modernity, believing it should happen naturally through free association rather than state mandates.";
+    }
+    if (isRight) {
+        return "You blend cultural flexibility with capitalist economics. You favor free markets and deregulation to drive national growth, while remaining moderate on social questions.\n\n**Societal & Cultural Posture:** You tend to prefer traditional family units and view marriage as a stabilizing cultural institution, but you're pragmatic about social change when it doesn't threaten economic freedom.";
+    }
+    if (isLeft) {
+        return "You combine a belief in economic redistribution and state welfare with a commitment to social justice and human rights, aiming to uplift the working class and marginalized groups.\n\n**Societal & Cultural Posture:** You are socially progressive, championing new definitions of family and culture. You view traditions critically if they enforce inequality, and believe society must actively reform for equitable outcomes.";
+    }
+
+    return "Your views are highly balanced across the spectrum, taking ideas from all across the political landscape depending entirely on pragmatic necessity rather than ideological purity.\n\n**Societal & Cultural Posture:** Your approach to culture, family, and social change is moderate and hyper-situational. You respect tradition but are constantly open to practical modernization, valuing whatever keeps society stable and prosperous.";
 }
