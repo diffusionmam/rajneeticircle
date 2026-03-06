@@ -270,6 +270,17 @@ body::before {
   margin-top: 16px;
 }
 
+.result-leaning {
+  font-size: 1.05rem;
+  font-style: italic;
+  color: #FFD180;
+  padding: 12px 20px;
+  background: rgba(255, 153, 51, 0.08);
+  border-left: 3px solid #FF9933;
+  border-radius: 6px;
+  display: none;
+}
+
 /* Spectrum Chart */
 .spectrum-container {
   position: relative;

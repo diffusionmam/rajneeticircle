@@ -21,6 +21,7 @@ export class UIRenderer {
 
     private resultTitle: HTMLElement;
     private resultDesc: HTMLElement;
+    private resultLeaning: HTMLElement;
     private spectrumDot: HTMLElement;
 
     constructor() {
@@ -35,6 +36,7 @@ export class UIRenderer {
 
         this.resultTitle = document.getElementById('result-title') as HTMLElement;
         this.resultDesc = document.getElementById('result-desc') as HTMLElement;
+        this.resultLeaning = document.getElementById('result-leaning') as HTMLElement;
         this.spectrumDot = document.getElementById('spectrum-dot') as HTMLElement;
     }
 
@@ -115,14 +117,31 @@ export class UIRenderer {
         this.resultTitle.innerText = result.title;
         this.resultDesc.innerText = result.description;
 
+        // Display leaning text if present
+        if (result.leaning && this.resultLeaning) {
+            this.resultLeaning.innerText = result.leaning;
+            this.resultLeaning.style.display = 'block';
+        } else if (this.resultLeaning) {
+            this.resultLeaning.innerText = '';
+            this.resultLeaning.style.display = 'none';
+        }
+
         // Position Dot
-        // Y is percentage from bottom (Lib) to top (Auth)
-        // X is percentage from left to right
+        // Remap logical 0-100 → image space 12%-88%
+        // The spectrum image's colored area spans from 12% to 88% of the container (76% total)
+        const IMG_MIN = 12;
+        const IMG_SPAN = 76; // 88 - 12
+
+        const imgX = IMG_MIN + (result.x / 100) * IMG_SPAN;
+        // Y: result.y is 0 = libertarian (bottom), 100 = authoritarian (top)
+        // In image space, top = auth, bottom = lib, so bottom CSS should map correctly
+        const imgY = IMG_MIN + (result.y / 100) * IMG_SPAN;
+
         setTimeout(() => {
             if (this.spectrumDot) {
                 this.spectrumDot.style.opacity = '1';
-                this.spectrumDot.style.left = `${result.x}%`;
-                this.spectrumDot.style.bottom = `${result.y}%`;
+                this.spectrumDot.style.left = `${imgX}%`;
+                this.spectrumDot.style.bottom = `${imgY}%`;
             }
         }, 500); // Wait for result card to fade in
     }
