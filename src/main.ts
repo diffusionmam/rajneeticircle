@@ -3,6 +3,7 @@ import { questions } from './data/questions';
 import type { QuizSession } from './logic/types';
 import { calculateResult } from './logic/scoring';
 import { UIRenderer } from './ui/render';
+import { inject } from '@vercel/analytics';
 
 class App {
   private session: QuizSession;
@@ -86,5 +87,6 @@ class App {
 
 // Bootstrap
 document.addEventListener('DOMContentLoaded', () => {
+  inject();
   new App();
 });
