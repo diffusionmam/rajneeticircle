@@ -1,4 +1,4 @@
-import type { Question, Option, ViewState, QuizSession } from '../logic/types';
+import type { Question, Option, ViewState } from '../logic/types';
 import type { ScoreResult } from '../logic/scoring';
 
 export class UIRenderer {
@@ -13,6 +13,7 @@ export class UIRenderer {
 
     private resultTitle: HTMLElement;
     private resultDesc: HTMLElement;
+    private spectrumDot: HTMLElement;
 
     constructor() {
         this.viewLanding = document.getElementById('view-landing') as HTMLElement;
@@ -26,6 +27,7 @@ export class UIRenderer {
 
         this.resultTitle = document.getElementById('result-title') as HTMLElement;
         this.resultDesc = document.getElementById('result-desc') as HTMLElement;
+        this.spectrumDot = document.getElementById('spectrum-dot') as HTMLElement;
     }
 
     public switchView(view: ViewState) {
@@ -77,7 +79,7 @@ export class UIRenderer {
             question.options.forEach((opt: Option) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
-                btn.innerHTML = `<strong>${opt.id})</strong>&nbsp;&nbsp;${opt.text}`;
+                btn.innerHTML = `<span class="option-label"><strong>${opt.id})</strong></span><span class="option-text">${opt.text}</span>`;
 
                 btn.onclick = () => {
                     // Visual feedback before proceeding
@@ -104,5 +106,16 @@ export class UIRenderer {
         this.progressBar.style.width = '100%'; // max out progress
         this.resultTitle.innerText = result.title;
         this.resultDesc.innerText = result.description;
+
+        // Position Dot
+        // Y is percentage from bottom (Lib) to top (Auth)
+        // X is percentage from left to right
+        setTimeout(() => {
+            if (this.spectrumDot) {
+                this.spectrumDot.style.opacity = '1';
+                this.spectrumDot.style.left = `${result.x}%`;
+                this.spectrumDot.style.bottom = `${result.y}%`;
+            }
+        }, 500); // Wait for result card to fade in
     }
 }

@@ -17,11 +17,13 @@
     <!-- View 1: Landing State -->
     <section id="view-landing" class="view active">
       <div class="glass-card text-center slide-up">
+        <img src="/images/india.avif" alt="India Logo"
+          style="width: 100px; height: auto; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" />
         <h1 class="title">Raajneeti Circle</h1>
         <h3>The Indian Political Compass</h3>
         <br>
-        <p class="subtitle">Discover your political ideology based on your stance regarding India's most pressing
-          socio-economic and geopolitical questions.</p>
+        <p class="subtitle" style="color: #ffffff;">Discover your political ideology based on your stance regarding
+          India's most pressing socio-economic and geopolitical questions.</p>
         <button id="btn-start" class="btn-primary mt-6 pulse-animation">Start Assessment</button>
       </div>
     </section>
@@ -29,7 +31,7 @@
     <!-- View 2: Quiz State -->
     <section id="view-quiz" class="view hidden">
       <div class="progress-container">
-        <div class="progress-text" id="progress-text">Question 1 of 50</div>
+        <div class="progress-text" id="progress-text" style="color: #ffffff;">Question 1 of 50</div>
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" id="progress-bar"></div>
         </div>
@@ -46,12 +48,18 @@
     <!-- View 3: Result State -->
     <section id="view-result" class="view hidden">
       <div class="glass-card text-center slide-up result-card">
-        <div class="result-header">Your Ideological Profile</div>
+        <div class="result-header" style="color: white;">Your Ideological Profile</div>
         <h1 id="result-title" class="title result-title text-gradient">The Result</h1>
+
+        <div id="spectrum-container" class="spectrum-container mt-6">
+          <img src="/images/spectrum.png" alt="Political Spectrum" class="spectrum-img" />
+          <div id="spectrum-dot" class="spectrum-dot"></div>
+        </div>
+
         <div id="result-desc" class="result-desc text-left mt-4">
           Description goes here...
         </div>
-        <button id="btn-restart" class="btn-secondary mt-8">Retake Assessment</button>
+        <button id="btn-restart" class="btn-secondary mt-8" style="color: white;">Retake Assessment</button>
       </div>
     </section>
 
