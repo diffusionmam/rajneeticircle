@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indian Political Compass</title>
+  <!-- Use a modern, premium font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/style.css" />
+</head>
+
+<body>
+  <!-- App Container -->
+  <div id="app" class="app-container">
+
+    <!-- View 1: Landing State -->
+    <section id="view-landing" class="view active">
+      <div class="glass-card text-center slide-up">
+        <img src="/images/india.avif" alt="India Logo"
+          style="width: 100px; height: auto; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" />
+        <h1 class="title">Raajneeti Circle</h1>
+        <h3>The Indian Political Compass</h3>
+        <br>
+        <p class="subtitle" style="color: #ffffff;">Discover your political ideology based on your stance regarding
+          India's most pressing socio-economic and geopolitical questions.</p>
+        <button id="btn-start" class="btn-primary mt-6 pulse-animation">Start Assessment</button>
+      </div>
+    </section>
+
+    <!-- View 2: Quiz State -->
+    <section id="view-quiz" class="view hidden">
+      <div class="progress-container">
+        <div class="progress-text" id="progress-text" style="color: #ffffff;">Question 1 of 50</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="glass-card quiz-card" id="quiz-card">
+        <h2 id="question-text" class="question-text">Question text goes here</h2>
+        <div id="options-container" class="options-container mt-6">
+          <!-- Option buttons injected via TS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- View 3: Result State -->
+    <section id="view-result" class="view hidden">
+      <div class="glass-card text-center slide-up result-card">
+        <div class="result-header" style="color: white;">Your Ideological Profile</div>
+        <h1 id="result-title" class="title result-title text-gradient">The Result</h1>
+
+        <div id="spectrum-container" class="spectrum-container mt-6">
+          <img src="/images/spectrum.png" alt="Political Spectrum" class="spectrum-img" />
+          <div id="spectrum-dot" class="spectrum-dot"></div>
+        </div>
+
+        <div id="result-desc" class="result-desc text-left mt-4">
+          Description goes here...
+        </div>
+        <button id="btn-restart" class="btn-secondary mt-8" style="color: white;">Retake Assessment</button>
+      </div>
+    </section>
+
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
