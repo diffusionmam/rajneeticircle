@@ -26,7 +26,7 @@ export function calculateResult(session: QuizSession): ScoreResult {
 
     // Stretch scores outward — real-world scores cluster in [-15, +15],
     // but the grid needs them spread across [0, 100].
-    const STRETCH = 1.8;
+    const STRETCH = 1.5;
     economicScore = Math.max(-50, Math.min(50, economicScore * STRETCH));
     authorityScore = Math.max(-50, Math.min(50, authorityScore * STRETCH));
 
