@@ -22,7 +22,13 @@ export interface ScoreResult {
  */
 
 export function calculateResult(session: QuizSession): ScoreResult {
-    const { economicScore, authorityScore } = session;
+    let { economicScore, authorityScore } = session;
+
+    // Stretch scores outward — real-world scores cluster in [-15, +15],
+    // but the grid needs them spread across [0, 100].
+    const STRETCH = 1.8;
+    economicScore = Math.max(-50, Math.min(50, economicScore * STRETCH));
+    authorityScore = Math.max(-50, Math.min(50, authorityScore * STRETCH));
 
     // Each axis has 25 questions. Max possible per axis = 25 * 2 = 50, Min = -50.
     // Normalize from [-50, +50] to [0, 100]
@@ -59,7 +65,7 @@ export function calculateResult(session: QuizSession): ScoreResult {
  *   18% image radius / 76% span * 100 = ~23.7 logical units
  */
 
-const MODERATE_CENTER_RADIUS = 23.7;
+const MODERATE_CENTER_RADIUS = 28;
 
 /**
  * Check if a point falls inside the Moderate Center circle.
