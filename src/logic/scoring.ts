@@ -65,7 +65,7 @@ export function calculateResult(session: QuizSession): ScoreResult {
  *   18% image radius / 76% span * 100 = ~23.7 logical units
  */
 
-const MODERATE_CENTER_RADIUS = 18;
+const MODERATE_CENTER_RADIUS = 23;
 
 /**
  * Check if a point falls inside the Moderate Center circle.
